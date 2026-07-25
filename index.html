@@ -214,6 +214,35 @@
     border-top: 1px solid var(--line);
   }
 
+  .chips-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 1px 4px;
+    margin-top: 7px;
+    scrollbar-width: none;
+  }
+  .chips-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 1.3px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--oak-d);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .chip:active {
+    background: var(--oak);
+    color: #fff;
+    border-color: var(--oak);
+  }
+
   /* ─── TOTALS ─── */
   .totals-box {
     background: var(--oak-d);
@@ -518,7 +547,7 @@
       <button class="btn btn-secondary btn-sm" onclick="addItem()">+ Adicionar Peça</button>
       <button class="btn btn-primary btn-sm" id="voice-btn" onclick="iniciarDitado()">🎤 Adicionar por Voz</button>
     </div>
-    <p class="voice-hint">Ex: "Roupeiro três portas, MDF branco, 180 por 220 por 60, 2 unidades, 150 euros" — confirma sempre os números depois.</p>
+    <p class="voice-hint">Ex: "Roupeiro três portas, MDF branco, 180 por 220 por 60, 2 unidades, 150 euros" — confirma sempre os números e usa os atalhos abaixo do Material se precisares de corrigir.</p>
   </div>
 
   <div class="card">
@@ -641,6 +670,13 @@ function fecharBanner() {
 let itemCount = 0;
 let logoBase64 = '';
 
+// Materiais mais comuns em carpintaria — usados nos "chips" de toque rápido
+// e no reconhecimento por palavra-chave do ditado por voz
+const MATERIAIS_COMUNS = [
+  'MDF', 'Contraplacado', 'Pinho', 'Carvalho', 'Faia',
+  'Lacado Branco', 'Lacado Preto', 'PVC', 'Termolaminado', 'Melamina', 'Inox'
+];
+
 // ══════════════════════════════════════════════════
 //  TABS
 // ══════════════════════════════════════════════════
@@ -680,6 +716,9 @@ function addItem(data) {
     <input type="text" id="desc-${id}" placeholder="ex: Roupeiro 3 portas" value="${d.desc||''}">
     <label>Material</label>
     <input type="text" id="mat-${id}" placeholder="ex: MDF lacado branco" value="${d.mat||''}">
+    <div class="chips-row">
+      ${MATERIAIS_COMUNS.map(m => `<button type="button" class="chip" onclick="setMaterial(${id}, '${m}')">${m}</button>`).join('')}
+    </div>
     <div class="row3">
       <div>
         <label>Larg. (cm)</label>
@@ -713,6 +752,13 @@ function addItem(data) {
 function removeItem(id) {
   document.getElementById('item-' + id).remove();
   calcTotals();
+}
+
+// Preenche o campo Material com um toque (atalho para corrigir
+// rapidamente quando o ditado por voz não apanha bem a palavra)
+function setMaterial(id, mat) {
+  const inp = document.getElementById('mat-' + id);
+  if (inp) inp.value = mat;
 }
 
 // ══════════════════════════════════════════════════
@@ -862,14 +908,28 @@ function processarDitado(textoOriginal) {
     texto = texto.replace(qtdMatch[0], '');
   }
 
-  // 4) Material — depois da vírgula costuma vir o material (heurística simples)
-  //    Ex: "roupeiro três portas, mdf branco, 180 por 220..."
-  const partes = texto.split(',').map(p => p.trim()).filter(Boolean);
-  if (partes.length >= 2) {
-    extraido.desc = partes[0];
-    extraido.mat  = partes[1];
+  // 4) Material — procura palavras-chave conhecidas em QUALQUER parte da
+  //    frase (não depende de haver uma vírgula a separar). Isto evita que
+  //    o material "desapareça" dentro da descrição quando o teu pai fala
+  //    sem pausas.
+  const MATERIAIS_REGEX = /\b(mdf|mdp|hdf|osb|pvc|contraplacado|plat[eé]x|pinho|carvalho|faia|cerejeira|freixo|nogueira|lacado|termolaminado|melamina|inox|vidro|acr[ií]lico)\b(\s+(branco|branca|preto|preta|cinza|cinzento|bege|natural|castanho))?/;
+  const matMatch = texto.match(MATERIAIS_REGEX);
+
+  if (matMatch) {
+    extraido.mat = matMatch[0];
+    texto = texto.replace(matMatch[0], '');
+    // o que sobra (sem vírgulas) é a descrição
+    extraido.desc = texto.replace(/,+/g, ' ');
   } else {
-    extraido.desc = partes[0] || texto.trim();
+    // Nenhuma palavra-chave conhecida — recurso: usa a vírgula como separador
+    // Ex: "roupeiro três portas, [material desconhecido], 180 por 220..."
+    const partes = texto.split(',').map(p => p.trim()).filter(Boolean);
+    if (partes.length >= 2) {
+      extraido.desc = partes[0];
+      extraido.mat  = partes[1];
+    } else {
+      extraido.desc = partes[0] || texto.trim();
+    }
   }
 
   // Limpa espaços a mais e capitaliza (incluindo siglas como MDF, PVC, etc.)
