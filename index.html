@@ -303,7 +303,57 @@
     border-radius: 8px;
   }
 
-  .add-btn-wrap { text-align: center; margin: 4px 0 10px; }
+  .add-btn-wrap { text-align: center; margin: 4px 0 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .voice-hint { text-align: center; font-size: .72rem; color: var(--muted); font-style: italic; margin-top: 2px; }
+
+  #voice-btn.listening {
+    background: var(--danger);
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(192,57,43,.5); }
+    70%  { box-shadow: 0 0 0 12px rgba(192,57,43,0); }
+    100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+  }
+
+  .listening-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,18,8,.75);
+    z-index: 998;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+    color: #fff;
+    text-align: center;
+    padding: 30px;
+  }
+  .listening-overlay.show { display: flex; }
+  .listening-orb {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: var(--oak);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    animation: pulse 1.2s infinite;
+  }
+  .listening-overlay p { font-size: .95rem; max-width: 280px; line-height: 1.5; }
+  .listening-overlay .lo-transcript { font-size: .82rem; color: var(--oak-l); min-height: 20px; }
+  .listening-overlay button {
+    background: var(--warm);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: .85rem;
+    color: var(--text);
+    cursor: pointer;
+  }
 
   /* ─── HISTORY ─── */
   .hist-card {
@@ -461,7 +511,9 @@
     <div id="items-container"></div>
     <div class="add-btn-wrap">
       <button class="btn btn-secondary btn-sm" onclick="addItem()">+ Adicionar Peça</button>
+      <button class="btn btn-primary btn-sm" id="voice-btn" onclick="iniciarDitado()">🎤 Adicionar por Voz</button>
     </div>
+    <p class="voice-hint">Ex: "Roupeiro três portas, MDF branco, 180 por 220 por 60, 2 unidades, 150 euros"</p>
   </div>
 
   <div class="card">
@@ -528,6 +580,14 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="listening-overlay" id="listening-overlay">
+  <div class="listening-orb">🎤</div>
+  <p>A ouvir... fala a descrição da peça</p>
+  <div class="lo-transcript" id="lo-transcript"></div>
+  <button onclick="pararDitado()">Parar</button>
+</div>
+
 
 <script>
 // ══════════════════════════════════════════════════
@@ -648,6 +708,138 @@ function addItem(data) {
 function removeItem(id) {
   document.getElementById('item-' + id).remove();
   calcTotals();
+}
+
+// ══════════════════════════════════════════════════
+//  DITADO POR VOZ (Web Speech API)
+// ══════════════════════════════════════════════════
+let recognition = null;
+let isListening = false;
+
+function getSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'pt-PT';
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+function iniciarDitado() {
+  if (isListening) { pararDitado(); return; }
+
+  recognition = getSpeechRecognition();
+  if (!recognition) {
+    showToast('O teu browser não suporta ditado por voz. Usa o Chrome.');
+    return;
+  }
+
+  isListening = true;
+  document.getElementById('voice-btn').classList.add('listening');
+  document.getElementById('listening-overlay').classList.add('show');
+  document.getElementById('lo-transcript').textContent = '';
+
+  recognition.onresult = e => {
+    let texto = '';
+    for (let i = 0; i < e.results.length; i++) {
+      texto += e.results[i][0].transcript;
+    }
+    document.getElementById('lo-transcript').textContent = texto;
+    if (e.results[e.results.length - 1].isFinal) {
+      processarDitado(texto);
+    }
+  };
+
+  recognition.onerror = e => {
+    pararDitado();
+    if (e.error === 'not-allowed' || e.error === 'permission-denied') {
+      showToast('Permite o acesso ao microfone nas definições do browser.');
+    } else if (e.error === 'no-speech') {
+      showToast('Não ouvi nada. Tenta outra vez.');
+    } else {
+      showToast('Erro no reconhecimento de voz.');
+    }
+  };
+
+  recognition.onend = () => {
+    pararDitado();
+  };
+
+  recognition.start();
+}
+
+function pararDitado() {
+  isListening = false;
+  document.getElementById('voice-btn').classList.remove('listening');
+  document.getElementById('listening-overlay').classList.remove('show');
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+  }
+}
+
+// Interpreta o texto falado e tenta extrair descrição, material, medidas, qtd e preço
+function processarDitado(textoOriginal) {
+  let texto = textoOriginal.toLowerCase().trim();
+  if (!texto) return;
+
+  const extraido = { desc: '', mat: '', larg: '', alt: '', prof: '', qtd: 1, preco: '' };
+
+  // Converte números escritos por extenso (comuns em orçamentos) para dígitos
+  const numerosPorExtenso = {
+    'um':1,'uma':1,'dois':2,'duas':2,'três':3,'tres':3,'quatro':4,'cinco':5,
+    'seis':6,'sete':7,'oito':8,'nove':9,'dez':10
+  };
+  Object.keys(numerosPorExtenso).forEach(palavra => {
+    texto = texto.replace(new RegExp('\\b' + palavra + '\\b', 'g'), numerosPorExtenso[palavra]);
+  });
+
+  // 1) Preço — "150 euros", "150€", "150 euro"
+  const precoMatch = texto.match(/(\d+(?:[.,]\d+)?)\s*(?:euros?|€)/);
+  if (precoMatch) {
+    extraido.preco = precoMatch[1].replace(',', '.');
+    texto = texto.replace(precoMatch[0], '');
+  }
+
+  // 2) Medidas — "180 por 220 por 60" ou "180x220x60" ou "180 cm por 220 cm..."
+  const dimMatch = texto.match(/(\d+)\s*(?:cm)?\s*(?:por|x|×)\s*(\d+)\s*(?:cm)?\s*(?:por|x|×)\s*(\d+)\s*(?:cm)?/);
+  if (dimMatch) {
+    extraido.larg = dimMatch[1];
+    extraido.alt  = dimMatch[2];
+    extraido.prof = dimMatch[3];
+    texto = texto.replace(dimMatch[0], '');
+  }
+
+  // 3) Quantidade — "2 unidades", "3 peças", "quantidade 2"
+  const qtdMatch = texto.match(/(\d+)\s*(?:unidades?|peças?|pecas?)\b/);
+  if (qtdMatch) {
+    extraido.qtd = parseInt(qtdMatch[1]);
+    texto = texto.replace(qtdMatch[0], '');
+  }
+
+  // 4) Material — depois da vírgula costuma vir o material (heurística simples)
+  //    Ex: "roupeiro três portas, mdf branco, 180 por 220..."
+  const partes = texto.split(',').map(p => p.trim()).filter(Boolean);
+  if (partes.length >= 2) {
+    extraido.desc = partes[0];
+    extraido.mat  = partes[1];
+  } else {
+    extraido.desc = partes[0] || texto.trim();
+  }
+
+  // Limpa espaços a mais
+  extraido.desc = capitalizar(extraido.desc.replace(/\s+/g, ' ').trim());
+  extraido.mat  = capitalizar(extraido.mat.replace(/\s+/g, ' ').trim());
+
+  // Cria a peça pré-preenchida
+  addItem(extraido);
+  showToast('Peça adicionada! Confirma os valores. ✓');
+}
+
+function capitalizar(s) {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function calcItem(id) {
