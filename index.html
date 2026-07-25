@@ -176,6 +176,11 @@
     padding: 14px 13px;
     margin-bottom: 10px;
     position: relative;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .item-block.recem-criado {
+    border-color: var(--oak);
+    box-shadow: 0 0 0 3px rgba(139,94,60,.25);
   }
   .item-header {
     display: flex;
@@ -513,7 +518,7 @@
       <button class="btn btn-secondary btn-sm" onclick="addItem()">+ Adicionar Peça</button>
       <button class="btn btn-primary btn-sm" id="voice-btn" onclick="iniciarDitado()">🎤 Adicionar por Voz</button>
     </div>
-    <p class="voice-hint">Ex: "Roupeiro três portas, MDF branco, 180 por 220 por 60, 2 unidades, 150 euros"</p>
+    <p class="voice-hint">Ex: "Roupeiro três portas, MDF branco, 180 por 220 por 60, 2 unidades, 150 euros" — confirma sempre os números depois.</p>
   </div>
 
   <div class="card">
@@ -812,6 +817,19 @@ function processarDitado(textoOriginal) {
 
   const extraido = { desc: '', mat: '', larg: '', alt: '', prof: '', qtd: 1, preco: '' };
 
+  // Corrige siglas de materiais ouvidas "letra a letra"
+  // Ex: "MDF" é ouvido como "e me dê f" / "eme dê efe" / "m d f"
+  const siglasFoneticas = [
+    { regex: /\b(e\s*me\s*d[êe]\s*f|eme\s*d[êe]\s*efe|em\s*d[êe]\s*efe|m\s*d\s*f)\b/g, sigla: 'MDF' },
+    { regex: /\b(p[êe]\s*v[êe]\s*c[êe]|p\s*v\s*c)\b/g, sigla: 'PVC' },
+    { regex: /\b(eme\s*d[êe]\s*p[êe]|em\s*d[êe]\s*p[êe]|m\s*d\s*p)\b/g, sigla: 'MDP' },
+    { regex: /\b(ag[áa]\s*d[êe]\s*efe|h\s*d\s*f)\b/g, sigla: 'HDF' },
+    { regex: /\b([óo]\s*esse\s*b[êe]|o\s*s\s*b)\b/g, sigla: 'OSB' },
+  ];
+  siglasFoneticas.forEach(({ regex, sigla }) => {
+    texto = texto.replace(regex, sigla.toLowerCase());
+  });
+
   // Converte números escritos por extenso (comuns em orçamentos) para dígitos
   const numerosPorExtenso = {
     'um':1,'uma':1,'dois':2,'duas':2,'três':3,'tres':3,'quatro':4,'cinco':5,
@@ -854,18 +872,40 @@ function processarDitado(textoOriginal) {
     extraido.desc = partes[0] || texto.trim();
   }
 
-  // Limpa espaços a mais
-  extraido.desc = capitalizar(extraido.desc.replace(/\s+/g, ' ').trim());
-  extraido.mat  = capitalizar(extraido.mat.replace(/\s+/g, ' ').trim());
+  // Limpa espaços a mais e capitaliza (incluindo siglas como MDF, PVC, etc.)
+  extraido.desc = formatarTexto(extraido.desc);
+  extraido.mat  = formatarTexto(extraido.mat);
 
   // Cria a peça pré-preenchida
   addItem(extraido);
-  showToast('Peça adicionada! Confirma os valores. ✓');
+  destacarUltimaPeca();
+  showToast('Peça adicionada — confirma os números! 🔍');
+}
+
+function formatarTexto(s) {
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s) return s;
+  s = capitalizar(s);
+  // Sempre que aparecer uma sigla conhecida, garante que fica em maiúsculas
+  s = s.replace(/\b(mdf|pvc|mdp|hdf|osb)\b/gi, m => m.toUpperCase());
+  return s;
 }
 
 function capitalizar(s) {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Faz scroll até à peça recém-criada e destaca-a por breves instantes,
+// para chamar a atenção para conferir os valores (o reconhecimento de
+// voz pode enganar-se em números e siglas)
+function destacarUltimaPeca() {
+  const blocos = document.querySelectorAll('.item-block');
+  const ultimo = blocos[blocos.length - 1];
+  if (!ultimo) return;
+  ultimo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  ultimo.classList.add('recem-criado');
+  setTimeout(() => ultimo.classList.remove('recem-criado'), 2200);
 }
 
 function calcItem(id) {
