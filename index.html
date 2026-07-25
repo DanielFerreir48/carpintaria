@@ -585,7 +585,7 @@
   <div class="listening-orb">🎤</div>
   <p>A ouvir... fala a descrição da peça</p>
   <div class="lo-transcript" id="lo-transcript"></div>
-  <button onclick="pararDitado()">Parar</button>
+  <button onclick="pararDitado(true)">Parar</button>
 </div>
 
 
@@ -715,6 +715,8 @@ function removeItem(id) {
 // ══════════════════════════════════════════════════
 let recognition = null;
 let isListening = false;
+let ultimoTexto = '';
+let ditadoProcessado = false;
 
 function getSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -728,7 +730,7 @@ function getSpeechRecognition() {
 }
 
 function iniciarDitado() {
-  if (isListening) { pararDitado(); return; }
+  if (isListening) { pararDitado(true); return; }
 
   recognition = getSpeechRecognition();
   if (!recognition) {
@@ -737,6 +739,8 @@ function iniciarDitado() {
   }
 
   isListening = true;
+  ultimoTexto = '';
+  ditadoProcessado = false;
   document.getElementById('voice-btn').classList.add('listening');
   document.getElementById('listening-overlay').classList.add('show');
   document.getElementById('lo-transcript').textContent = '';
@@ -746,31 +750,53 @@ function iniciarDitado() {
     for (let i = 0; i < e.results.length; i++) {
       texto += e.results[i][0].transcript;
     }
+    ultimoTexto = texto;
     document.getElementById('lo-transcript').textContent = texto;
     if (e.results[e.results.length - 1].isFinal) {
-      processarDitado(texto);
+      finalizarDitado();
     }
   };
 
   recognition.onerror = e => {
-    pararDitado();
     if (e.error === 'not-allowed' || e.error === 'permission-denied') {
       showToast('Permite o acesso ao microfone nas definições do browser.');
+      pararDitado(false);
     } else if (e.error === 'no-speech') {
       showToast('Não ouvi nada. Tenta outra vez.');
-    } else {
+      pararDitado(false);
+    } else if (e.error !== 'aborted') {
       showToast('Erro no reconhecimento de voz.');
+      pararDitado(false);
     }
   };
 
   recognition.onend = () => {
-    pararDitado();
+    // Se ainda não foi processado (ex: reconhecimento terminou sozinho
+    // sem marcar isFinal), tenta processar o que já foi ouvido.
+    finalizarDitado();
+    pararDitado(false);
   };
 
   recognition.start();
 }
 
-function pararDitado() {
+// Processa o texto ouvido (uma única vez por sessão de ditado)
+function finalizarDitado() {
+  if (ditadoProcessado) return;
+  if (ultimoTexto.trim()) {
+    ditadoProcessado = true;
+    processarDitado(ultimoTexto);
+  }
+}
+
+// manual = true quando o utilizador carrega no botão "Parar"
+function pararDitado(manual) {
+  if (manual) {
+    finalizarDitado();
+    if (!ultimoTexto.trim()) {
+      showToast('Não ouvi nada. Tenta outra vez.');
+    }
+  }
   isListening = false;
   document.getElementById('voice-btn').classList.remove('listening');
   document.getElementById('listening-overlay').classList.remove('show');
