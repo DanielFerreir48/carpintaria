@@ -1,15 +1,17 @@
-// Service Worker — Carpintaria PWA
-const CACHE = 'carpintaria-v1';
+// Service Worker — Carpintaria PWA (Estratégia Network-First)
+const CACHE = 'carpintaria-v2';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Instalar: guarda os ficheiros em cache
+// Instalar: guarda os ficheiros base em cache
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -24,18 +26,24 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: serve da cache, com fallback para a rede
+// Fetch: Tenta ir à rede primeiro (para ter sempre a versão mais recente).
+// Se estiver offline, serve a versão guardada em cache.
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(resp => {
-        // Guarda em cache dinamicamente (só para o mesmo domínio)
-        if (e.request.url.startsWith(self.location.origin)) {
-          caches.open(CACHE).then(cache => cache.put(e.request, resp.clone()));
+    fetch(e.request)
+      .then(resp => {
+        // Se a resposta da rede for válida, atualiza a cache automaticamente
+        if (resp && resp.status === 200 && e.request.url.startsWith(self.location.origin)) {
+          const respClone = resp.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, respClone));
         }
         return resp;
-      }).catch(() => caches.match('/index.html'));
-    })
+      })
+      .catch(() => {
+        // Sem internet: procura na cache
+        return caches.match(e.request).then(cached => cached || caches.match('./index.html'));
+      })
   );
 });
