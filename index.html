@@ -38,7 +38,6 @@
     background: var(--cream);
     color: var(--text);
     min-height: 100dvh;
-    /* evita bounce scroll no iOS */
     overscroll-behavior: none;
   }
 
@@ -47,7 +46,6 @@
     background: var(--oak-d);
     color: #fff;
     padding: 18px 20px 14px;
-    /* espaço para a status bar no iOS */
     padding-top: max(18px, env(safe-area-inset-top) + 10px);
     display: flex;
     align-items: center;
@@ -65,7 +63,6 @@
   }
   header span { font-size: .72rem; font-weight: 300; opacity: .7; display: block; }
 
-  /* botão instalar app */
   #install-btn {
     background: var(--oak-l);
     border: none;
@@ -107,6 +104,32 @@
   /* ─── SECTIONS ─── */
   .section { display: none; padding: 18px 16px 100px; }
   .section.active { display: block; }
+
+  /* ─── BANNER DE EDIÇÃO ─── */
+  .edit-banner {
+    display: none;
+    background: #FFF3CD;
+    border: 1.5px solid #FFEEBA;
+    color: #856404;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: .83rem;
+    font-weight: 500;
+  }
+  .edit-banner.show { display: flex; }
+  .edit-banner button {
+    background: #856404;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
 
   /* ─── CARDS ─── */
   .card {
@@ -499,6 +522,45 @@
     padding: 4px;
     flex-shrink: 0;
   }
+
+  /* ─── ÁREA DE IMPRESSÃO (PDF NATIVO PWA) ─── */
+  #print-area { display: none; }
+
+  @media print {
+    body { background: #fff !important; color: #1C1208 !important; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    header, .install-banner, .nav-tabs, .section, .toast, .listening-overlay { display: none !important; }
+    #print-area { display: block !important; width: 100%; }
+
+    .p-header { background: #5C3D1E; color: #fff; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 12px 12px; }
+    .p-emp-info { display: flex; align-items: center; gap: 14px; }
+    .p-emp-text h1 { font-family: 'Playfair Display', serif; font-size: 16pt; margin-bottom: 4px; }
+    .p-emp-text p { font-size: 8pt; color: #C49A6C; line-height: 1.6; }
+    .p-orc-ref { text-align: right; }
+    .p-orc-ref .label { font-family: 'Playfair Display', serif; font-size: 18pt; font-weight: 700; }
+    .p-orc-ref .num, .p-orc-ref .data { font-size: 8pt; color: #C49A6C; margin-top: 2px; }
+    .p-body { padding: 20px 24px; }
+    .p-cliente-box { background: #F2EBE0; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+    .p-cliente-box .label { font-size: 7pt; font-weight: 700; color: #8A7560; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .p-cliente-box .nome { font-size: 12pt; font-weight: 600; }
+    .p-cliente-box .cont { font-size: 9pt; color: #8A7560; margin-top: 2px; }
+    .p-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+    .p-table thead tr { background: #5C3D1E; color: #fff; }
+    .p-table thead th { padding: 7px 8px; font-size: 7.5pt; font-weight: 700; letter-spacing: .05em; text-align: left; }
+    .p-table thead th:nth-child(4) { text-align: center; }
+    .p-table thead th:nth-child(5), .p-table thead th:nth-child(6) { text-align: right; }
+    .p-table tbody tr:nth-child(even) { background: #FAF6F0; }
+    .p-table tbody td { padding: 7px 8px; font-size: 8.5pt; vertical-align: top; border-bottom: 1px solid #EEE6DA; }
+    .p-totais { margin-top: 4px; display: flex; justify-content: flex-end; }
+    .p-totais-inner { width: 220px; border-collapse: collapse; }
+    .p-totais-inner tr td { padding: 4px 8px; font-size: 9pt; }
+    .p-totais-inner .subtotal-row td { color: #5C3D1E; }
+    .p-total-final td { background: #5C3D1E; color: #fff; font-weight: 700; font-size: 11pt; padding: 8px 12px; font-family: 'Playfair Display', serif; }
+    .p-obs-block { margin-top: 18px; padding: 12px 16px; background: #FAF6F0; border-left: 4px solid #C49A6C; border-radius: 0 8px 8px 0; }
+    .p-obs-block strong { font-size: 7.5pt; letter-spacing: .07em; text-transform: uppercase; color: #8A7560; display: block; margin-bottom: 5px; }
+    .p-obs-block p { font-size: 8.5pt; line-height: 1.5; color: #3C2814; white-space: pre-wrap; }
+    .p-validade { font-size: 7.5pt; color: #8A7560; margin-top: 12px; }
+    .p-rodape { margin-top: 20px; border-top: 1px solid #D9CCBC; padding-top: 10px; text-align: center; font-size: 7.5pt; color: #8A7560; }
+  }
 </style>
 </head>
 <body>
@@ -511,7 +573,6 @@
   <button id="install-btn" onclick="instalarApp()">📲 Instalar App</button>
 </header>
 
-<!-- Banner de instalação (aparece automaticamente no Android) -->
 <div class="install-banner" id="install-banner">
   <div>
     <strong>📲 Instalar como App</strong>
@@ -530,14 +591,20 @@
 <!-- ════════════════════ NOVO ORÇAMENTO ════════════════════ -->
 <div class="section active" id="tab-novo">
 
+  <!-- Banner que indica quando se está a editar um orçamento existente -->
+  <div class="edit-banner" id="edit-banner">
+    <span id="edit-banner-text">✏️ A editar orçamento</span>
+    <button type="button" onclick="cancelarEdicao()">Novo em branco</button>
+  </div>
+
   <div class="card">
     <div class="card-title">Dados do Cliente</div>
     <label>Nome do cliente</label>
-    <input type="text" id="cli-nome" placeholder="ex: João Silva" autocomplete="off">
+    <input type="text" id="cli-nome" placeholder="ex: João Silva" autocomplete="off" oninput="guardarRascunho()">
     <label>Contacto (telefone ou email)</label>
-    <input type="text" id="cli-contacto" placeholder="ex: 912 345 678" inputmode="tel">
+    <input type="text" id="cli-contacto" placeholder="ex: 912 345 678" inputmode="tel" oninput="guardarRascunho()">
     <label>Notas do cliente (opcional)</label>
-    <textarea id="cli-notas" placeholder="ex: Moradia em Braga, urgente para setembro..."></textarea>
+    <textarea id="cli-notas" placeholder="ex: Moradia em Braga, urgente para setembro..." oninput="guardarRascunho()"></textarea>
   </div>
 
   <div class="card">
@@ -569,19 +636,19 @@
   <div class="card">
     <div class="card-title">Validade e Notas</div>
     <label>Validade do orçamento</label>
-    <select id="validade">
+    <select id="validade" onchange="guardarRascunho()">
       <option value="15">15 dias</option>
       <option value="30" selected>30 dias</option>
       <option value="60">60 dias</option>
       <option value="0">Sem validade</option>
     </select>
     <label>Observações (aparece no PDF)</label>
-    <textarea id="obs" placeholder="ex: Preço inclui montagem. Pagamento: 50% entrada, 50% na entrega."></textarea>
+    <textarea id="obs" placeholder="ex: Preço inclui montagem. Pagamento: 50% entrada, 50% na entrega." oninput="guardarRascunho()"></textarea>
   </div>
 
   <button class="btn btn-success" onclick="gerarPDF()">📄 Gerar PDF</button>
-  <button class="btn btn-primary" onclick="guardarOrcamento()">💾 Guardar Orçamento</button>
-  <button class="btn btn-secondary" onclick="limparFormulario()">🗑️ Limpar</button>
+  <button class="btn btn-primary" id="btn-guardar-orc" onclick="guardarOrcamento()">💾 Guardar Orçamento</button>
+  <button class="btn btn-secondary" onclick="limparFormulario(false)">🗑️ Limpar</button>
 </div>
 
 <!-- ════════════════════ HISTÓRICO ════════════════════ -->
@@ -622,8 +689,23 @@
   <button onclick="pararDitado(true)">Parar</button>
 </div>
 
+<!-- Contentor invisível no ecrã, usado apenas para impressão / PDF -->
+<div id="print-area"></div>
 
 <script>
+// ══════════════════════════════════════════════════
+//  SEGURANÇA HTML (Escape de caracteres especiais)
+// ══════════════════════════════════════════════════
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ══════════════════════════════════════════════════
 //  PWA — Service Worker + Install prompt
 // ══════════════════════════════════════════════════
@@ -631,14 +713,13 @@ let deferredPrompt = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // Mostra banner e botão
   document.getElementById('install-banner').classList.add('show');
   document.getElementById('install-btn').style.display = 'block';
 });
@@ -669,13 +750,32 @@ function fecharBanner() {
 // ══════════════════════════════════════════════════
 let itemCount = 0;
 let logoBase64 = '';
+let editingId = null; // Guarda o ID do orçamento quando se está a reeditar do histórico
 
-// Materiais mais comuns em carpintaria — usados nos "chips" de toque rápido
-// e no reconhecimento por palavra-chave do ditado por voz
 const MATERIAIS_COMUNS = [
   'MDF', 'Contraplacado', 'Pinho', 'Carvalho', 'Faia',
   'Lacado Branco', 'Lacado Preto', 'PVC', 'Termolaminado', 'Melamina', 'Inox'
 ];
+
+function atualizarUIEdicao(nomeCliente) {
+  const banner = document.getElementById('edit-banner');
+  const btnGuardar = document.getElementById('btn-guardar-orc');
+  if (editingId) {
+    banner.classList.add('show');
+    document.getElementById('edit-banner-text').textContent = `✏️ A editar: ${nomeCliente || 'Orçamento'}`;
+    btnGuardar.textContent = '💾 Atualizar Orçamento';
+  } else {
+    banner.classList.remove('show');
+    btnGuardar.textContent = '💾 Guardar Orçamento';
+  }
+}
+
+function cancelarEdicao() {
+  limparFormulario(true);
+  addItem();
+  guardarRascunho();
+  showToast('Novo orçamento em branco');
+}
 
 // ══════════════════════════════════════════════════
 //  TABS
@@ -699,7 +799,7 @@ function switchTabDirect(name) {
 // ══════════════════════════════════════════════════
 //  ITEMS
 // ══════════════════════════════════════════════════
-function addItem(data) {
+function addItem(data, skipSave) {
   itemCount++;
   const id = itemCount;
   const c = document.getElementById('items-container');
@@ -713,52 +813,54 @@ function addItem(data) {
       <button class="btn-remove" onclick="removeItem(${id})">✕</button>
     </div>
     <label>Descrição da peça / móvel</label>
-    <input type="text" id="desc-${id}" placeholder="ex: Roupeiro 3 portas" value="${d.desc||''}">
+    <input type="text" id="desc-${id}" placeholder="ex: Roupeiro 3 portas" value="${escapeHtml(d.desc||'')}" oninput="guardarRascunho()">
     <label>Material</label>
-    <input type="text" id="mat-${id}" placeholder="ex: MDF lacado branco" value="${d.mat||''}">
+    <input type="text" id="mat-${id}" placeholder="ex: MDF lacado branco" value="${escapeHtml(d.mat||'')}" oninput="guardarRascunho()">
     <div class="chips-row">
-      ${MATERIAIS_COMUNS.map(m => `<button type="button" class="chip" onclick="setMaterial(${id}, '${m}')">${m}</button>`).join('')}
+      ${MATERIAIS_COMUNS.map(m => `<button type="button" class="chip" onclick="setMaterial(${id}, '${escapeHtml(m)}')">${escapeHtml(m)}</button>`).join('')}
     </div>
     <div class="row3">
       <div>
         <label>Larg. (cm)</label>
-        <input type="number" id="larg-${id}" placeholder="180" value="${d.larg||''}" inputmode="decimal" oninput="calcItem(${id})">
+        <input type="number" id="larg-${id}" placeholder="180" value="${escapeHtml(d.larg||'')}" inputmode="decimal" oninput="calcItem(${id})">
       </div>
       <div>
         <label>Alt. (cm)</label>
-        <input type="number" id="alt-${id}" placeholder="220" value="${d.alt||''}" inputmode="decimal" oninput="calcItem(${id})">
+        <input type="number" id="alt-${id}" placeholder="220" value="${escapeHtml(d.alt||'')}" inputmode="decimal" oninput="calcItem(${id})">
       </div>
       <div>
         <label>Prof. (cm)</label>
-        <input type="number" id="prof-${id}" placeholder="60" value="${d.prof||''}" inputmode="decimal" oninput="calcItem(${id})">
+        <input type="number" id="prof-${id}" placeholder="60" value="${escapeHtml(d.prof||'')}" inputmode="decimal" oninput="calcItem(${id})">
       </div>
     </div>
     <div class="row2">
       <div>
         <label>Qtd</label>
-        <input type="number" id="qtd-${id}" value="${d.qtd||1}" min="1" inputmode="numeric" oninput="calcItem(${id})">
+        <input type="number" id="qtd-${id}" value="${escapeHtml(d.qtd ?? 1)}" min="1" inputmode="numeric" oninput="calcItem(${id})">
       </div>
       <div>
         <label>Preço Unit. (€)</label>
-        <input type="number" id="preco-${id}" placeholder="0.00" value="${d.preco||''}" step="0.01" inputmode="decimal" oninput="calcItem(${id})">
+        <input type="number" id="preco-${id}" placeholder="0.00" value="${escapeHtml(d.preco ?? '')}" step="0.01" inputmode="decimal" oninput="calcItem(${id})">
       </div>
     </div>
     <div class="item-subtotal" id="sub-${id}">Subtotal: 0,00 €</div>
   `;
   c.appendChild(el);
-  if (data) calcItem(id);
+  if (data) calcItem(id, true);
+  if (!skipSave) guardarRascunho();
 }
 
 function removeItem(id) {
-  document.getElementById('item-' + id).remove();
+  document.getElementById('item-' + id)?.remove();
   calcTotals();
 }
 
-// Preenche o campo Material com um toque (atalho para corrigir
-// rapidamente quando o ditado por voz não apanha bem a palavra)
 function setMaterial(id, mat) {
   const inp = document.getElementById('mat-' + id);
-  if (inp) inp.value = mat;
+  if (inp) {
+    inp.value = mat;
+    guardarRascunho();
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -822,8 +924,6 @@ function iniciarDitado() {
   };
 
   recognition.onend = () => {
-    // Se ainda não foi processado (ex: reconhecimento terminou sozinho
-    // sem marcar isFinal), tenta processar o que já foi ouvido.
     finalizarDitado();
     pararDitado(false);
   };
@@ -831,7 +931,6 @@ function iniciarDitado() {
   recognition.start();
 }
 
-// Processa o texto ouvido (uma única vez por sessão de ditado)
 function finalizarDitado() {
   if (ditadoProcessado) return;
   if (ultimoTexto.trim()) {
@@ -840,7 +939,6 @@ function finalizarDitado() {
   }
 }
 
-// manual = true quando o utilizador carrega no botão "Parar"
 function pararDitado(manual) {
   if (manual) {
     finalizarDitado();
@@ -856,15 +954,12 @@ function pararDitado(manual) {
   }
 }
 
-// Interpreta o texto falado e tenta extrair descrição, material, medidas, qtd e preço
 function processarDitado(textoOriginal) {
   let texto = textoOriginal.toLowerCase().trim();
   if (!texto) return;
 
   const extraido = { desc: '', mat: '', larg: '', alt: '', prof: '', qtd: 1, preco: '' };
 
-  // Corrige siglas de materiais ouvidas "letra a letra"
-  // Ex: "MDF" é ouvido como "e me dê f" / "eme dê efe" / "m d f"
   const siglasFoneticas = [
     { regex: /\b(e\s*me\s*d[êe]\s*f|eme\s*d[êe]\s*efe|em\s*d[êe]\s*efe|m\s*d\s*f)\b/g, sigla: 'MDF' },
     { regex: /\b(p[êe]\s*v[êe]\s*c[êe]|p\s*v\s*c)\b/g, sigla: 'PVC' },
@@ -876,7 +971,6 @@ function processarDitado(textoOriginal) {
     texto = texto.replace(regex, sigla.toLowerCase());
   });
 
-  // Converte números escritos por extenso (comuns em orçamentos) para dígitos
   const numerosPorExtenso = {
     'um':1,'uma':1,'dois':2,'duas':2,'três':3,'tres':3,'quatro':4,'cinco':5,
     'seis':6,'sete':7,'oito':8,'nove':9,'dez':10
@@ -885,14 +979,12 @@ function processarDitado(textoOriginal) {
     texto = texto.replace(new RegExp('\\b' + palavra + '\\b', 'g'), numerosPorExtenso[palavra]);
   });
 
-  // 1) Preço — "150 euros", "150€", "150 euro"
   const precoMatch = texto.match(/(\d+(?:[.,]\d+)?)\s*(?:euros?|€)/);
   if (precoMatch) {
     extraido.preco = precoMatch[1].replace(',', '.');
     texto = texto.replace(precoMatch[0], '');
   }
 
-  // 2) Medidas — "180 por 220 por 60" ou "180x220x60" ou "180 cm por 220 cm..."
   const dimMatch = texto.match(/(\d+)\s*(?:cm)?\s*(?:por|x|×)\s*(\d+)\s*(?:cm)?\s*(?:por|x|×)\s*(\d+)\s*(?:cm)?/);
   if (dimMatch) {
     extraido.larg = dimMatch[1];
@@ -901,28 +993,20 @@ function processarDitado(textoOriginal) {
     texto = texto.replace(dimMatch[0], '');
   }
 
-  // 3) Quantidade — "2 unidades", "3 peças", "quantidade 2"
   const qtdMatch = texto.match(/(\d+)\s*(?:unidades?|peças?|pecas?)\b/);
   if (qtdMatch) {
     extraido.qtd = parseInt(qtdMatch[1]);
     texto = texto.replace(qtdMatch[0], '');
   }
 
-  // 4) Material — procura palavras-chave conhecidas em QUALQUER parte da
-  //    frase (não depende de haver uma vírgula a separar). Isto evita que
-  //    o material "desapareça" dentro da descrição quando o teu pai fala
-  //    sem pausas.
   const MATERIAIS_REGEX = /\b(mdf|mdp|hdf|osb|pvc|contraplacado|plat[eé]x|pinho|carvalho|faia|cerejeira|freixo|nogueira|lacado|termolaminado|melamina|inox|vidro|acr[ií]lico)\b(\s+(branco|branca|preto|preta|cinza|cinzento|bege|natural|castanho))?/;
   const matMatch = texto.match(MATERIAIS_REGEX);
 
   if (matMatch) {
     extraido.mat = matMatch[0];
     texto = texto.replace(matMatch[0], '');
-    // o que sobra (sem vírgulas) é a descrição
     extraido.desc = texto.replace(/,+/g, ' ');
   } else {
-    // Nenhuma palavra-chave conhecida — recurso: usa a vírgula como separador
-    // Ex: "roupeiro três portas, [material desconhecido], 180 por 220..."
     const partes = texto.split(',').map(p => p.trim()).filter(Boolean);
     if (partes.length >= 2) {
       extraido.desc = partes[0];
@@ -932,11 +1016,9 @@ function processarDitado(textoOriginal) {
     }
   }
 
-  // Limpa espaços a mais e capitaliza (incluindo siglas como MDF, PVC, etc.)
   extraido.desc = formatarTexto(extraido.desc);
   extraido.mat  = formatarTexto(extraido.mat);
 
-  // Cria a peça pré-preenchida
   addItem(extraido);
   destacarUltimaPeca();
   showToast('Peça adicionada — confirma os números! 🔍');
@@ -946,7 +1028,6 @@ function formatarTexto(s) {
   s = s.replace(/\s+/g, ' ').trim();
   if (!s) return s;
   s = capitalizar(s);
-  // Sempre que aparecer uma sigla conhecida, garante que fica em maiúsculas
   s = s.replace(/\b(mdf|pvc|mdp|hdf|osb)\b/gi, m => m.toUpperCase());
   return s;
 }
@@ -956,9 +1037,6 @@ function capitalizar(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// Faz scroll até à peça recém-criada e destaca-a por breves instantes,
-// para chamar a atenção para conferir os valores (o reconhecimento de
-// voz pode enganar-se em números e siglas)
 function destacarUltimaPeca() {
   const blocos = document.querySelectorAll('.item-block');
   const ultimo = blocos[blocos.length - 1];
@@ -968,15 +1046,16 @@ function destacarUltimaPeca() {
   setTimeout(() => ultimo.classList.remove('recem-criado'), 2200);
 }
 
-function calcItem(id) {
+function calcItem(id, skipSave) {
   const qtd   = parseFloat(document.getElementById('qtd-'+id)?.value) || 0;
   const preco = parseFloat(document.getElementById('preco-'+id)?.value) || 0;
   const sub   = qtd * preco;
-  document.getElementById('sub-'+id).textContent = 'Subtotal: ' + fmtEur(sub);
-  calcTotals();
+  const subEl = document.getElementById('sub-'+id);
+  if (subEl) subEl.textContent = 'Subtotal: ' + fmtEur(sub);
+  calcTotals(skipSave);
 }
 
-function calcTotals() {
+function calcTotals(skipSave) {
   let sub = 0;
   document.querySelectorAll('[id^="preco-"]').forEach(inp => {
     const id  = inp.id.split('-')[1];
@@ -990,10 +1069,60 @@ function calcTotals() {
   document.getElementById('t-iva').textContent   = fmtEur(iva);
   document.getElementById('t-total').textContent = fmtEur(total);
   document.getElementById('t-iva-row').style.display = comIva ? 'flex' : 'none';
+  if (!skipSave) guardarRascunho();
 }
 
 // ══════════════════════════════════════════════════
-//  PDF (via janela de impressão)
+//  AUTO-SAVE DO RASCUNHO
+// ══════════════════════════════════════════════════
+function guardarRascunho() {
+  const rascunho = {
+    editingId,
+    cliente:  document.getElementById('cli-nome').value,
+    contacto: document.getElementById('cli-contacto').value,
+    notas:    document.getElementById('cli-notas').value,
+    comIva:   document.getElementById('iva-toggle').checked,
+    validade: document.getElementById('validade').value,
+    obs:      document.getElementById('obs').value,
+    items:    collectItems()
+  };
+  localStorage.setItem('orc_rascunho', JSON.stringify(rascunho));
+}
+
+function restaurarRascunho() {
+  const raw = localStorage.getItem('orc_rascunho');
+  if (!raw) return false;
+  try {
+    const r = JSON.parse(raw);
+    const temDados = r.cliente || r.contacto || r.notas || r.obs ||
+      (r.items && r.items.some(i => i.desc || i.mat || i.larg || i.alt || i.prof || i.preco > 0));
+    if (!temDados) return false;
+
+    editingId = r.editingId || null;
+    document.getElementById('cli-nome').value     = r.cliente || '';
+    document.getElementById('cli-contacto').value = r.contacto || '';
+    document.getElementById('cli-notas').value    = r.notas || '';
+    document.getElementById('obs').value          = r.obs || '';
+    document.getElementById('validade').value     = r.validade || '30';
+    document.getElementById('iva-toggle').checked = !!r.comIva;
+
+    document.getElementById('items-container').innerHTML = '';
+    itemCount = 0;
+    if (r.items && r.items.length) {
+      r.items.forEach(it => addItem(it, true));
+    } else {
+      addItem(null, true);
+    }
+    calcTotals(true);
+    atualizarUIEdicao(r.cliente);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  PDF NATIVO (via @media print na própria página)
 // ══════════════════════════════════════════════════
 function gerarPDF() {
   const emp   = getEmpresa();
@@ -1008,112 +1137,77 @@ function gerarPDF() {
   const total  = sub + iva;
   const obs    = document.getElementById('obs').value.trim();
   const val    = document.getElementById('validade').value;
-  const numOrc = 'ORC-' + Date.now().toString().slice(-6);
+  const refId  = editingId || Date.now();
+  const numOrc = 'ORC-' + refId.toString().slice(-6);
   const hoje   = new Date().toLocaleDateString('pt-PT');
 
   const linhasTabela = items.map(it => {
-    const dim = [it.larg && it.larg+'cm', it.alt && it.alt+'cm', it.prof && it.prof+'cm'].filter(Boolean).join(' × ') || '—';
+    const dim = [it.larg && escapeHtml(it.larg)+'cm', it.alt && escapeHtml(it.alt)+'cm', it.prof && escapeHtml(it.prof)+'cm'].filter(Boolean).join(' × ') || '—';
     return `<tr>
-      <td>${it.desc || '—'}</td>
-      <td>${it.mat  || '—'}</td>
+      <td>${escapeHtml(it.desc) || '—'}</td>
+      <td>${escapeHtml(it.mat)  || '—'}</td>
       <td style="white-space:nowrap">${dim}</td>
-      <td style="text-align:center">${it.qtd}</td>
+      <td style="text-align:center">${escapeHtml(it.qtd)}</td>
       <td style="text-align:right">${fmtEur(it.preco)}</td>
       <td style="text-align:right;font-weight:700">${fmtEur(it.subtotal)}</td>
     </tr>`;
   }).join('');
 
-  const ivaRow    = comIva ? `<tr><td colspan="5" style="text-align:right;padding:4px 8px">IVA (23%)</td><td style="text-align:right;padding:4px 8px">${fmtEur(iva)}</td></tr>` : '';
-  const validRow  = val !== '0' ? `<p class="validade">Este orçamento é válido por ${val} dias a partir de ${hoje}.</p>` : '';
-  const obsBlock  = obs ? `<div class="obs-block"><strong>OBSERVAÇÕES</strong><p>${obs}</p></div>` : '';
-  const logoHtml  = logoBase64 ? `<img src="${logoBase64}" style="height:64px;border-radius:10px;object-fit:cover">` : '<div style="font-size:2.2rem">🪵</div>';
-  const nifTxt    = emp.nif ? ` · NIF: ${emp.nif}` : '';
+  const ivaRow   = comIva ? `<tr><td colspan="5" style="text-align:right;padding:4px 8px">IVA (23%)</td><td style="text-align:right;padding:4px 8px">${fmtEur(iva)}</td></tr>` : '';
+  const validRow = val !== '0' ? `<p class="p-validade">Este orçamento é válido por ${escapeHtml(val)} dias a partir de ${hoje}.</p>` : '';
+  const obsBlock = obs ? `<div class="p-obs-block"><strong>OBSERVAÇÕES</strong><p>${escapeHtml(obs)}</p></div>` : '';
+  const logoHtml = logoBase64 ? `<img src="${logoBase64}" style="height:64px;border-radius:10px;object-fit:cover">` : '<div style="font-size:2.2rem">🪵</div>';
+  const nifTxt   = emp.nif ? ` · NIF: ${escapeHtml(emp.nif)}` : '';
 
-  const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
-  <title>Orçamento ${numOrc}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;600&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'DM Sans',sans-serif;color:#1C1208;background:#fff;font-size:9pt}
-    .header{background:#5C3D1E;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-radius:0 0 12px 12px}
-    .emp-info{display:flex;align-items:center;gap:14px}
-    .emp-text h1{font-family:'Playfair Display',serif;font-size:16pt;margin-bottom:4px}
-    .emp-text p{font-size:8pt;color:#C49A6C;line-height:1.6}
-    .orc-ref{text-align:right}
-    .orc-ref .label{font-family:'Playfair Display',serif;font-size:18pt;font-weight:700}
-    .orc-ref .num,.orc-ref .data{font-size:8pt;color:#C49A6C;margin-top:2px}
-    .body{padding:20px 24px}
-    .cliente-box{background:#F2EBE0;border-radius:8px;padding:12px 16px;margin:14px 0}
-    .cliente-box .label{font-size:7pt;font-weight:700;color:#8A7560;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-    .cliente-box .nome{font-size:12pt;font-weight:600}
-    .cliente-box .cont{font-size:9pt;color:#8A7560;margin-top:2px}
-    table{width:100%;border-collapse:collapse;margin:4px 0}
-    thead tr{background:#5C3D1E;color:#fff}
-    thead th{padding:7px 8px;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-align:left}
-    thead th:nth-child(4){text-align:center}
-    thead th:nth-child(5),thead th:nth-child(6){text-align:right}
-    tbody tr:nth-child(even){background:#FAF6F0}
-    tbody td{padding:7px 8px;font-size:8.5pt;vertical-align:top;border-bottom:1px solid #EEE6DA}
-    .totais{margin-top:4px;display:flex;justify-content:flex-end}
-    .totais-inner{width:220px}
-    .totais-inner tr td{padding:4px 8px;font-size:9pt}
-    .totais-inner .subtotal-row td{color:#5C3D1E}
-    .total-final td{background:#5C3D1E;color:#fff;font-weight:700;font-size:11pt;padding:8px 12px;font-family:'Playfair Display',serif}
-    .obs-block{margin-top:18px;padding:12px 16px;background:#FAF6F0;border-left:4px solid #C49A6C;border-radius:0 8px 8px 0}
-    .obs-block strong{font-size:7.5pt;letter-spacing:.07em;text-transform:uppercase;color:#8A7560;display:block;margin-bottom:5px}
-    .obs-block p{font-size:8.5pt;line-height:1.5;color:#3C2814}
-    .validade{font-size:7.5pt;color:#8A7560;margin-top:12px}
-    .rodape{margin-top:20px;border-top:1px solid #D9CCBC;padding-top:10px;text-align:center;font-size:7.5pt;color:#8A7560}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-  </style></head><body>
-  <div class="header">
-    <div class="emp-info">
-      ${logoHtml}
-      <div class="emp-text">
-        <h1>${emp.nome || 'Carpintaria'}</h1>
-        <p>${[emp.morada, emp.tel ? 'Tel: '+emp.tel : '', emp.email].filter(Boolean).join('<br>')}</p>
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = `
+    <div class="p-header">
+      <div class="p-emp-info">
+        ${logoHtml}
+        <div class="p-emp-text">
+          <h1>${escapeHtml(emp.nome) || 'Carpintaria'}</h1>
+          <p>${[escapeHtml(emp.morada), emp.tel ? 'Tel: '+escapeHtml(emp.tel) : '', escapeHtml(emp.email)].filter(Boolean).join('<br>')}</p>
+        </div>
+      </div>
+      <div class="p-orc-ref">
+        <div class="label">ORÇAMENTO</div>
+        <div class="num">${numOrc}</div>
+        <div class="data">Data: ${hoje}</div>
       </div>
     </div>
-    <div class="orc-ref">
-      <div class="label">ORÇAMENTO</div>
-      <div class="num">${numOrc}</div>
-      <div class="data">Data: ${hoje}</div>
+    <div class="p-body">
+      <div class="p-cliente-box">
+        <div class="label">Cliente</div>
+        <div class="nome">${escapeHtml(nome)}</div>
+        ${cont ? `<div class="cont">${escapeHtml(cont)}</div>` : ''}
+      </div>
+      <table class="p-table">
+        <thead><tr>
+          <th>Descrição</th><th>Material</th><th>Medidas</th>
+          <th>Qtd</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Subtotal</th>
+        </tr></thead>
+        <tbody>${linhasTabela}</tbody>
+      </table>
+      <div class="p-totais"><table class="p-totais-inner">
+        <tr class="subtotal-row"><td>Subtotal</td><td style="text-align:right">${fmtEur(sub)}</td></tr>
+        ${ivaRow}
+        <tr class="p-total-final"><td>TOTAL</td><td style="text-align:right">${fmtEur(total)}</td></tr>
+      </table></div>
+      ${obsBlock}
+      ${validRow}
+      <div class="p-rodape">${escapeHtml(emp.nome) || 'Carpintaria'}${emp.tel ? ' · ' + escapeHtml(emp.tel) : ''}${emp.email ? ' · ' + escapeHtml(emp.email) : ''}${nifTxt}</div>
     </div>
-  </div>
-  <div class="body">
-    <div class="cliente-box">
-      <div class="label">Cliente</div>
-      <div class="nome">${nome}</div>
-      ${cont ? `<div class="cont">${cont}</div>` : ''}
-    </div>
-    <table>
-      <thead><tr>
-        <th>Descrição</th><th>Material</th><th>Medidas</th>
-        <th>Qtd</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Subtotal</th>
-      </tr></thead>
-      <tbody>${linhasTabela}</tbody>
-    </table>
-    <div class="totais"><table class="totais-inner">
-      <tr class="subtotal-row"><td>Subtotal</td><td style="text-align:right">${fmtEur(sub)}</td></tr>
-      ${ivaRow}
-      <tr class="total-final"><td>TOTAL</td><td style="text-align:right">${fmtEur(total)}</td></tr>
-    </table></div>
-    ${obsBlock}
-    ${validRow}
-    <div class="rodape">${emp.nome || 'Carpintaria'}${emp.tel ? ' · ' + emp.tel : ''}${emp.email ? ' · ' + emp.email : ''}${nifTxt}</div>
-  </div>
-  <script>window.onload=function(){window.print()}<\/script>
-  </body></html>`;
+  `;
 
-  const win = window.open('', '_blank');
-  if (!win) { showToast('Permite pop-ups para gerar o PDF'); return; }
-  win.document.write(html);
-  win.document.close();
-  showToast('A abrir janela de impressão... ✓');
+  // Define temporariamente o título da página para que o ficheiro PDF fique com o nome certo
+  const tituloOriginal = document.title;
+  document.title = `Orcamento_${numOrc}_${nome.replace(/\s+/g, '_')}`;
+  window.print();
+  document.title = tituloOriginal;
 }
 
 // ══════════════════════════════════════════════════
-//  HISTÓRICO
+//  HISTÓRICO (Sem duplicados ao editar)
 // ══════════════════════════════════════════════════
 function guardarOrcamento() {
   const nome = document.getElementById('cli-nome').value.trim();
@@ -1125,8 +1219,11 @@ function guardarOrcamento() {
   const sub    = items.reduce((a, i) => a + i.subtotal, 0);
   const total  = comIva ? sub * 1.23 : sub;
 
+  const hist = JSON.parse(localStorage.getItem('orc_hist') || '[]');
+  const isUpdate = !!editingId;
+
   const orc = {
-    id: Date.now(),
+    id: editingId || Date.now(),
     data: new Date().toLocaleDateString('pt-PT'),
     cliente: nome,
     contacto: document.getElementById('cli-contacto').value.trim(),
@@ -1136,10 +1233,22 @@ function guardarOrcamento() {
     validade: document.getElementById('validade').value
   };
 
-  const hist = JSON.parse(localStorage.getItem('orc_hist') || '[]');
-  hist.unshift(orc);
+  if (editingId) {
+    const idx = hist.findIndex(x => x.id === editingId);
+    if (idx !== -1) {
+      hist[idx] = orc;
+    } else {
+      hist.unshift(orc);
+    }
+  } else {
+    hist.unshift(orc);
+    editingId = orc.id; // Passa a estar em modo de edição caso carregue em Guardar outra vez seguida
+  }
+
   localStorage.setItem('orc_hist', JSON.stringify(hist));
-  showToast('Orçamento guardado! ✓');
+  atualizarUIEdicao(nome);
+  guardarRascunho();
+  showToast(isUpdate ? 'Orçamento atualizado! ✓' : 'Orçamento guardado! ✓');
 }
 
 function renderHistorico() {
@@ -1153,8 +1262,8 @@ function renderHistorico() {
     <div class="hist-card" onclick="carregarOrcamento(${o.id})">
       <div class="hist-icon">🪵</div>
       <div class="hist-info">
-        <div class="hist-name">${o.cliente}</div>
-        <div class="hist-meta">${o.data} · ${o.items.length} peça${o.items.length>1?'s':''}</div>
+        <div class="hist-name">${escapeHtml(o.cliente)}</div>
+        <div class="hist-meta">${escapeHtml(o.data)} · ${o.items.length} peça${o.items.length>1?'s':''}</div>
       </div>
       <div style="text-align:right">
         <div class="hist-total">${fmtEur(o.total)}</div>
@@ -1169,16 +1278,19 @@ function carregarOrcamento(id) {
   const o = hist.find(x => x.id === id);
   if (!o) return;
   limparFormulario(true);
+  editingId = o.id;
   document.getElementById('cli-nome').value     = o.cliente;
   document.getElementById('cli-contacto').value = o.contacto || '';
   document.getElementById('cli-notas').value    = o.notas || '';
   document.getElementById('obs').value          = o.obs || '';
   document.getElementById('validade').value     = o.validade || '30';
   document.getElementById('iva-toggle').checked = o.comIva;
-  o.items.forEach(it => addItem(it));
-  calcTotals();
+  o.items.forEach(it => addItem(it, true));
+  calcTotals(true);
+  atualizarUIEdicao(o.cliente);
+  guardarRascunho();
   switchTabDirect('novo');
-  showToast('Orçamento carregado!');
+  showToast('Orçamento carregado para edição!');
 }
 
 function eliminarOrc(id) {
@@ -1186,6 +1298,11 @@ function eliminarOrc(id) {
   let hist = JSON.parse(localStorage.getItem('orc_hist') || '[]');
   hist = hist.filter(x => x.id !== id);
   localStorage.setItem('orc_hist', JSON.stringify(hist));
+  if (editingId === id) {
+    editingId = null;
+    atualizarUIEdicao();
+    guardarRascunho();
+  }
   renderHistorico();
 }
 
@@ -1233,11 +1350,11 @@ function collectItems() {
     const qtd   = parseFloat(document.getElementById('qtd-'+id)?.value) || 1;
     const preco = parseFloat(document.getElementById('preco-'+id)?.value) || 0;
     items.push({
-      desc: document.getElementById('desc-'+id)?.value.trim(),
-      mat:  document.getElementById('mat-'+id)?.value.trim(),
-      larg: document.getElementById('larg-'+id)?.value,
-      alt:  document.getElementById('alt-'+id)?.value,
-      prof: document.getElementById('prof-'+id)?.value,
+      desc: document.getElementById('desc-'+id)?.value.trim() || '',
+      mat:  document.getElementById('mat-'+id)?.value.trim() || '',
+      larg: document.getElementById('larg-'+id)?.value || '',
+      alt:  document.getElementById('alt-'+id)?.value || '',
+      prof: document.getElementById('prof-'+id)?.value || '',
       qtd, preco, subtotal: qtd * preco
     });
   });
@@ -1245,13 +1362,25 @@ function collectItems() {
 }
 
 function limparFormulario(silent) {
+  if (!silent && !confirm('Tens a certeza que queres limpar todos os campos deste orçamento?')) {
+    return;
+  }
+  editingId = null;
+  atualizarUIEdicao();
   ['cli-nome','cli-contacto','cli-notas','obs'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('iva-toggle').checked = false;
   document.getElementById('validade').value = '30';
   document.getElementById('items-container').innerHTML = '';
   itemCount = 0;
-  calcTotals();
-  if (!silent) showToast('Formulário limpo');
+  localStorage.removeItem('orc_rascunho');
+
+  if (!silent) {
+    addItem(null, true);
+    calcTotals(true);
+    showToast('Formulário limpo');
+  } else {
+    calcTotals(true);
+  }
 }
 
 function fmtEur(n) {
@@ -1286,7 +1415,10 @@ function showToast(msg) {
     document.getElementById('logo-placeholder').style.display = 'none';
   }
 
-  addItem();
+  // Se existir um rascunho em progresso, restaura-o; caso contrário inicia com 1 peça vazia
+  if (!restaurarRascunho()) {
+    addItem(null, true);
+  }
 })();
 </script>
 </body>
