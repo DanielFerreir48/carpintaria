@@ -1,8 +1,8 @@
 # Carpintaria — Quote Generator PWA
 
-A lightweight Progressive Web App (PWA) I built for my father's carpentry business to create, manage, and export client quotes directly from his phone[cite: 1, 4]. 
+A lightweight Progressive Web App (PWA) I built for my father's carpentry business to create, manage, and export client quotes directly from his phone. 
 
-It runs completely client-side with vanilla HTML, CSS, and JavaScript (no frameworks or build steps), works offline after the first load, and can be installed on Android/iOS like a native app.
+It runs completely client-side with vanilla HTML, CSS, and JavaScript (no frameworks or build steps), works offline after the first load, and can be installed to the home screen on Android/iOS to run in standalone fullscreen mode.
 
 **Live demo:** [https://DanielFerreir48.github.io/carpintaria/](https://DanielFerreir48.github.io/carpintaria/)
 
